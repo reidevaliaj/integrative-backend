@@ -1,0 +1,15 @@
+[Unit]
+Description=Integrative Backend FastAPI service
+After=network.target
+
+[Service]
+User=rei
+Group=rei
+WorkingDirectory=/home/rei/apps/integrative-backend
+EnvironmentFile=/home/rei/apps/integrative-backend/.env
+ExecStart=/home/rei/apps/integrative-backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8015
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
