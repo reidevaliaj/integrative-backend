@@ -11,6 +11,5 @@ class MagazineRead(BaseModel):
     title: str
     eyebrow: str
     description: str
-    pdf_filename: str
-    pdf_url: str
+    is_accessible: bool
     created_at: datetime

@@ -6,27 +6,25 @@ from app.models.subscription import SubscriptionPlan
 
 DEFAULT_MAGAZINES = [
     {
-        "slug": "current-main-issue",
-        "title": "Current Main Issue",
-        "eyebrow": "2026 | No. 194",
-        "description": "A flagship issue focused on integrative medicine, orthomolecular science, and current clinical perspectives.",
-        "pdf_filename": "current-main-issue.pdf",
-    },
-    {
-        "slug": "sample-issue-request",
-        "title": "Sample Issue Request",
-        "eyebrow": "Digital and Print",
-        "description": "A sample edition designed to help new readers understand the editorial approach and scientific depth of the journal.",
-        "pdf_filename": "sample-issue-request.pdf",
-    },
-    {
-        "slug": "current-special-issue",
-        "title": "Current Special Issue",
-        "eyebrow": "Special Issue SH41",
-        "description": "A focused special issue for readers who want deeper insight into selected topics within integrative medicine.",
-        "pdf_filename": "current-special-issue.pdf",
+        "slug": "special-issue-sh40",
+        "title": "Special Issue SH40",
+        "eyebrow": "Protected Digital Edition",
+        "description": "A full journal issue for subscribed readers, delivered through the protected digital reader for integrative and orthomolecular medicine.",
+        "pdf_filename": "1.) SH40 Internet - komplett.pdf",
     },
 ]
+
+PLACEHOLDER_MAGAZINE_SLUGS = {
+    "current-main-issue",
+    "sample-issue-request",
+    "current-special-issue",
+}
+
+PLACEHOLDER_MAGAZINE_FILES = {
+    "current-main-issue.pdf",
+    "sample-issue-request.pdf",
+    "current-special-issue.pdf",
+}
 
 DEFAULT_PLAN = {
     "code": "digital-annual",
@@ -38,15 +36,34 @@ DEFAULT_PLAN = {
 
 
 def seed_magazines(db: Session) -> None:
-    existing_slugs = set(db.scalars(select(Magazine.slug)).all())
-    created = False
-    for payload in DEFAULT_MAGAZINES:
-        if payload["slug"] in existing_slugs:
-            continue
-        db.add(Magazine(**payload))
-        created = True
+    magazines = db.scalars(select(Magazine).order_by(Magazine.id)).all()
+    magazines_by_slug = {magazine.slug: magazine for magazine in magazines}
+    desired_slugs = {payload["slug"] for payload in DEFAULT_MAGAZINES}
+    changed = False
 
-    if created:
+    for magazine in magazines:
+        if magazine.slug in PLACEHOLDER_MAGAZINE_SLUGS or magazine.pdf_filename in PLACEHOLDER_MAGAZINE_FILES:
+            if magazine.slug not in desired_slugs:
+                db.delete(magazine)
+                changed = True
+
+    for payload in DEFAULT_MAGAZINES:
+        magazine = magazines_by_slug.get(payload["slug"])
+        if magazine is None:
+            db.add(Magazine(**payload))
+            changed = True
+            continue
+
+        for field, value in payload.items():
+            if getattr(magazine, field) != value:
+                setattr(magazine, field, value)
+                changed = True
+
+        if not magazine.is_published:
+            magazine.is_published = True
+            changed = True
+
+    if changed:
         db.commit()
 
 
