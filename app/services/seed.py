@@ -7,9 +7,9 @@ from app.models.subscription import SubscriptionPlan
 DEFAULT_MAGAZINES = [
     {
         "slug": "special-issue-sh40",
-        "title": "Special Issue SH40",
-        "eyebrow": "Protected Digital Edition",
-        "description": "A full journal issue for subscribed readers, delivered through the protected digital reader for integrative and orthomolecular medicine.",
+        "title": "Longevity",
+        "eyebrow": "2026 | Special Issue No. 40",
+        "description": "A digital special issue of OM & Nutrition dedicated to healthy aging, prevention, immune aging and integrative longevity medicine.",
         "pdf_filename": "1.) SH40 Internet - komplett.pdf",
     },
 ]
@@ -27,11 +27,11 @@ PLACEHOLDER_MAGAZINE_FILES = {
 }
 
 DEFAULT_PLAN = {
-    "code": "digital-annual",
-    "name": "Annual Digital Access",
-    "description": "Full access to all published magazines and the subscriber dashboard. This is currently a fake subscription flow.",
-    "interval": "yearly",
-    "price_display": "EUR 99 / year",
+    "code": "longevity-digital-issue",
+    "name": "Digital Access - Longevity Issue",
+    "description": "Online access to the Longevity special issue through the reader dashboard. This is currently a demo purchase flow.",
+    "interval": "one-time",
+    "price_display": "EUR 20 / issue",
 }
 
 
@@ -68,9 +68,24 @@ def seed_magazines(db: Session) -> None:
 
 
 def seed_subscription_plans(db: Session) -> None:
-    existing_plan = db.scalar(select(SubscriptionPlan).where(SubscriptionPlan.code == DEFAULT_PLAN["code"]))
-    if existing_plan:
-        return
+    existing_plan = db.scalar(
+        select(SubscriptionPlan)
+        .where(SubscriptionPlan.code.in_([DEFAULT_PLAN["code"], "digital-annual"]))
+        .order_by(SubscriptionPlan.id)
+    )
+    if existing_plan is None:
+        existing_plan = db.scalar(select(SubscriptionPlan).order_by(SubscriptionPlan.id))
 
-    db.add(SubscriptionPlan(**DEFAULT_PLAN))
-    db.commit()
+    changed = False
+
+    if existing_plan is None:
+        db.add(SubscriptionPlan(**DEFAULT_PLAN))
+        changed = True
+    else:
+        for field, value in DEFAULT_PLAN.items():
+            if getattr(existing_plan, field) != value:
+                setattr(existing_plan, field, value)
+                changed = True
+
+    if changed:
+        db.commit()

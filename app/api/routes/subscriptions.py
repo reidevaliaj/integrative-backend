@@ -57,13 +57,13 @@ def fake_subscribe(
             user_id=current_user.id,
             plan_id=plan.id,
             status="active",
-            notes="Fake subscription activated for demo purposes.",
+            notes="Demo access activated for the current digital issue.",
         )
         db.add(subscription)
     else:
         subscription.plan_id = plan.id
         subscription.status = "active"
-        subscription.notes = "Fake subscription activated for demo purposes."
+        subscription.notes = "Demo access activated for the current digital issue."
 
     db.commit()
     db.refresh(subscription)
