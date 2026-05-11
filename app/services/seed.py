@@ -9,7 +9,7 @@ DEFAULT_MAGAZINES = [
         "slug": "special-issue-sh40",
         "title": "Longevity",
         "eyebrow": "2026 | Special Issue No. 40",
-        "description": "A digital special issue of OM & Nutrition dedicated to healthy aging, prevention, immune aging and integrative longevity medicine.",
+        "description": "The current digital special issue of OM & Nutrition, included in the annual subscription and dedicated to healthy aging, prevention, immune aging and integrative longevity medicine.",
         "pdf_filename": "1.) SH40 Internet - komplett.pdf",
     },
 ]
@@ -27,11 +27,11 @@ PLACEHOLDER_MAGAZINE_FILES = {
 }
 
 DEFAULT_PLAN = {
-    "code": "longevity-digital-issue",
-    "name": "Digital Access - Longevity Issue",
-    "description": "Online access to the Longevity special issue through the reader dashboard. This is currently a demo purchase flow.",
-    "interval": "one-time",
-    "price_display": "EUR 20 / issue",
+    "code": "annual-digital-subscription",
+    "name": "Annual Digital Subscription",
+    "description": "Annual subscription for OM & Nutrition with access to the current subscription year and newly released issues during that year. This is currently a demo purchase flow.",
+    "interval": "yearly",
+    "price_display": "8 issues per year",
 }
 
 
