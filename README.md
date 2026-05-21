@@ -5,9 +5,10 @@ FastAPI backend for the Integrative Medicine Journal platform.
 ## Features
 
 - JWT-based authentication
-- PostgreSQL-backed users, magazines, and fake subscriptions
+- PostgreSQL-backed users, magazines, subscriptions, and payment orders
 - Seeded magazine data and sample PDF files
 - Optional welcome emails through Resend
+- Hosted myPOS monthly checkout with backend-verified access activation
 - Ready for deployment behind Nginx and systemd
 
 ## Local setup
@@ -34,6 +35,9 @@ The API will be available at `http://localhost:8000`.
 - `GET /api/v1/subscriptions/plans`
 - `GET /api/v1/subscriptions/me`
 - `POST /api/v1/subscriptions/subscribe`
+- `POST /api/v1/payments/mypos/checkout`
+- `POST /api/v1/payments/mypos/notify`
+- `GET /api/v1/payments/orders/{order_code}`
 - `GET /api/v1/health`
 
 ## Deployment notes

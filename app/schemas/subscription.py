@@ -13,6 +13,8 @@ class SubscriptionPlanRead(BaseModel):
     interval: str
     price_display: str
     is_fake: bool = True
+    checkout_provider: str | None = None
+    checkout_enabled: bool = False
 
 
 class UserSubscriptionRead(BaseModel):
@@ -21,6 +23,12 @@ class UserSubscriptionRead(BaseModel):
     id: int
     status: str
     notes: str | None
+    provider: str | None
+    billing_interval: str | None
+    current_period_start: datetime | None
+    current_period_end: datetime | None
+    auto_renew: bool
+    cancel_at_period_end: bool
     created_at: datetime
     updated_at: datetime
     plan: SubscriptionPlanRead

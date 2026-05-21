@@ -22,3 +22,4 @@ class User(Base):
     )
 
     subscriptions = relationship("UserSubscription", back_populates="user", cascade="all, delete-orphan")
+    payment_orders = relationship("PaymentOrder", cascade="all, delete-orphan")

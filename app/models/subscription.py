@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, ForeignKey, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -28,6 +28,17 @@ class UserSubscription(Base):
     plan_id: Mapped[int] = mapped_column(ForeignKey("subscription_plans.id"), index=True)
     status: Mapped[str] = mapped_column(String(50), default="active")
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    provider: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    billing_interval: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    current_period_start: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    current_period_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    activated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    canceled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    latest_order_code: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    latest_transaction_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    stored_card_token: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    auto_renew: Mapped[bool] = mapped_column(Boolean, default=False)
+    cancel_at_period_end: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

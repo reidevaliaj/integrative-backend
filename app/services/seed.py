@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.models.magazine import Magazine
 from app.models.subscription import SubscriptionPlan
 
@@ -9,7 +10,7 @@ DEFAULT_MAGAZINES = [
         "slug": "special-issue-sh40",
         "title": "Longevity",
         "eyebrow": "2026 | Special Issue No. 40",
-        "description": "The current digital special issue of OM & Nutrition, included in the annual subscription and dedicated to healthy aging, prevention, immune aging and integrative longevity medicine.",
+        "description": "The current digital special issue of OM & Nutrition, available through the subscription library and dedicated to healthy aging, prevention, immune aging and integrative longevity medicine.",
         "pdf_filename": "1.) SH40 Internet - komplett.pdf",
     },
 ]
@@ -27,11 +28,11 @@ PLACEHOLDER_MAGAZINE_FILES = {
 }
 
 DEFAULT_PLAN = {
-    "code": "annual-digital-subscription",
-    "name": "Annual Digital Subscription",
-    "description": "Annual subscription for OM & Nutrition with access to the current subscription year and newly released issues during that year. This is currently a demo purchase flow.",
-    "interval": "yearly",
-    "price_display": "8 issues per year",
+    "code": "monthly-digital-subscription",
+    "name": "Monthly Digital Subscription",
+    "description": "Monthly subscription for OM & Nutrition with online access to the current issue library. When myPOS is configured, payment is handled on the hosted myPOS checkout page.",
+    "interval": "monthly",
+    "price_display": settings.subscription_price_display,
 }
 
 
@@ -70,7 +71,7 @@ def seed_magazines(db: Session) -> None:
 def seed_subscription_plans(db: Session) -> None:
     existing_plan = db.scalar(
         select(SubscriptionPlan)
-        .where(SubscriptionPlan.code.in_([DEFAULT_PLAN["code"], "digital-annual"]))
+        .where(SubscriptionPlan.code.in_([DEFAULT_PLAN["code"], "digital-annual", "annual-digital-subscription"]))
         .order_by(SubscriptionPlan.id)
     )
     if existing_plan is None:
