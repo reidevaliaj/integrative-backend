@@ -21,6 +21,7 @@ from app.services.mypos import MyPosConfigurationError, mypos_service
 from app.services.subscriptions import compute_monthly_period, expire_subscription_if_needed, subscription_is_active, utc_now
 
 router = APIRouter()
+TERMINAL_ORDER_STATUSES = {"paid", "canceled", "reversed", "failed"}
 
 
 def _build_order_code(user_id: int) -> str:
@@ -83,6 +84,7 @@ def _serialize_order(order: PaymentOrder) -> PaymentOrderRead:
         latest_transaction_ref=order.latest_transaction_ref,
         paid_at=order.paid_at,
         created_at=order.created_at,
+        updated_at=order.updated_at,
     )
 
 
@@ -117,8 +119,8 @@ def _activate_subscription_for_paid_order(db: Session, *, order: PaymentOrder, c
     subscription.canceled_at = None
     subscription.latest_order_code = order.order_code
     subscription.latest_transaction_ref = order.latest_transaction_ref
-    subscription.notes = "Monthly myPOS payment confirmed."
-    if card_token:
+    subscription.notes = "Monthly OM & Nutrition payment confirmed."
+    if card_token and mypos_service.should_request_card_token:
         subscription.stored_card_token = card_token
 
 
@@ -135,8 +137,18 @@ def _revoke_subscription_for_reversed_order(db: Session, order: PaymentOrder) ->
         return
 
     subscription.status = "past_due"
-    subscription.notes = "Latest myPOS payment was reversed."
+    subscription.notes = "Latest OM & Nutrition payment was reversed."
     subscription.canceled_at = utc_now()
+
+
+def _mark_order_failed(order: PaymentOrder, transaction_ref: str | None = None) -> None:
+    if order.status == "failed":
+        return
+
+    order.status = "failed"
+    order.failed_at = utc_now()
+    if transaction_ref:
+        order.latest_transaction_ref = transaction_ref
 
 
 @router.post("/mypos/checkout", response_model=MyPosCheckoutCreateResponse)
@@ -221,6 +233,7 @@ async def mypos_notify(request: Request, db: Session = Depends(get_db)) -> Plain
     payload = dict(ordered_items)
     event_type = payload.get("IPCmethod", "IPCPurchaseNotify")
     order = _find_order(db, payload.get("OrderID"))
+    transaction_ref = payload.get("IPC_Trnref")
 
     try:
         signature_valid = mypos_service.verify_payload(ordered_items)
@@ -230,6 +243,8 @@ async def mypos_notify(request: Request, db: Session = Depends(get_db)) -> Plain
     _record_event(db, order=order, event_type=event_type, ordered_items=ordered_items, signature_valid=signature_valid)
 
     if not signature_valid:
+        if order is not None and order.status not in TERMINAL_ORDER_STATUSES:
+            _mark_order_failed(order, transaction_ref)
         db.commit()
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid myPOS signature")
 
@@ -238,26 +253,49 @@ async def mypos_notify(request: Request, db: Session = Depends(get_db)) -> Plain
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Payment order not found")
 
     if payload.get("Currency") != order.currency or Decimal(payload.get("Amount", "0")) != order.amount:
+        if order.status not in TERMINAL_ORDER_STATUSES:
+            _mark_order_failed(order, transaction_ref)
         db.commit()
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Payment amount mismatch")
 
     if event_type == "IPCPurchaseRollback":
-        order.status = "reversed"
-        order.reversed_at = utc_now()
-        order.latest_transaction_ref = payload.get("IPC_Trnref")
-        _revoke_subscription_for_reversed_order(db, order)
+        if order.status != "reversed":
+            order.status = "reversed"
+            order.reversed_at = utc_now()
+            order.latest_transaction_ref = transaction_ref
+            _revoke_subscription_for_reversed_order(db, order)
         db.commit()
         return PlainTextResponse("OK")
 
-    if order.status != "paid":
-        card_token = payload.get("CardToken")
-        order.status = "paid"
-        order.signature_validated = True
-        order.latest_transaction_ref = payload.get("IPC_Trnref")
-        order.stored_card_token = card_token
-        order.paid_at = utc_now()
-        _activate_subscription_for_paid_order(db, order=order, card_token=card_token)
+    if event_type != "IPCPurchaseNotify":
+        if order.status not in TERMINAL_ORDER_STATUSES:
+            _mark_order_failed(order, transaction_ref)
         db.commit()
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unsupported myPOS event")
+
+    if order.status == "reversed":
+        db.commit()
+        return PlainTextResponse("OK")
+
+    if order.status == "failed":
+        db.commit()
+        return PlainTextResponse("OK")
+
+    if order.status == "paid":
+        order.signature_validated = True
+        if transaction_ref and not order.latest_transaction_ref:
+            order.latest_transaction_ref = transaction_ref
+        db.commit()
+        return PlainTextResponse("OK")
+
+    card_token = payload.get("CardToken") if mypos_service.should_request_card_token else None
+    order.status = "paid"
+    order.signature_validated = True
+    order.latest_transaction_ref = transaction_ref
+    order.stored_card_token = card_token
+    order.paid_at = utc_now()
+    _activate_subscription_for_paid_order(db, order=order, card_token=card_token)
+    db.commit()
 
     return PlainTextResponse("OK")
 

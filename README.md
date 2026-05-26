@@ -9,6 +9,7 @@ FastAPI backend for the Integrative Medicine Journal platform.
 - Seeded magazine data and sample PDF files
 - Optional welcome emails through Resend
 - Hosted myPOS monthly checkout with backend-verified access activation
+- Manual monthly renewals for launch, with recurring card token flows disabled by default
 - Ready for deployment behind Nginx and systemd
 
 ## Local setup
@@ -46,3 +47,4 @@ Deployment examples are included in:
 
 - `deploy/integrative-backend.service`
 - `deploy/ohm.cod-st.com.nginx.conf`
+- `docs/mypos-live-checklist.md`

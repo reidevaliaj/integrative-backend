@@ -89,6 +89,10 @@ class MyPosService:
         except MyPosConfigurationError:
             return False
 
+    @property
+    def should_request_card_token(self) -> bool:
+        return settings.mypos_recurring_enabled and self.request_card_token
+
     def build_checkout_fields(self, order: PaymentOrder, user: User) -> list[tuple[str, str]]:
         if not self.is_checkout_enabled:
             raise MyPosConfigurationError("myPOS checkout is not configured")
@@ -128,7 +132,7 @@ class MyPosService:
                 ]
             )
 
-        if self.request_card_token:
+        if self.should_request_card_token:
             fields.append(("CardTokenRequest", "2"))
         else:
             fields.append(("CardTokenRequest", "0"))

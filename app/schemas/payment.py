@@ -26,3 +26,4 @@ class PaymentOrderRead(BaseModel):
     latest_transaction_ref: str | None
     paid_at: datetime | None
     created_at: datetime
+    updated_at: datetime

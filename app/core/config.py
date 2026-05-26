@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     mypos_payment_method: str = "1"
     mypos_payment_parameters_required: int = 3
     mypos_monthly_amount: Decimal | None = None
+    mypos_recurring_enabled: bool = False
     mypos_request_card_token: bool = False
     subscription_price_display: str = "Monthly digital access"
 
