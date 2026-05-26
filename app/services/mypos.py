@@ -111,6 +111,12 @@ class MyPosService:
             ("PaymentMethod", self.payment_method),
             ("PaymentParametersRequired", str(self.payment_parameters_required)),
             ("Note", order.description[:127]),
+            ("CartItems", "1"),
+            ("Article_1", order.description[:127]),
+            ("Quantity_1", "1"),
+            ("Price_1", amount),
+            ("Currency_1", order.currency),
+            ("Amount_1", amount),
         ]
 
         if self.payment_parameters_required == 1:
