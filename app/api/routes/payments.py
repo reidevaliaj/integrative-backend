@@ -2,6 +2,7 @@ import json
 import secrets
 from datetime import timedelta
 from decimal import Decimal
+from urllib.parse import parse_qsl
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import PlainTextResponse, RedirectResponse
@@ -34,8 +35,11 @@ async def _extract_ordered_items(request: Request) -> list[tuple[str, str]]:
     if request.method == "GET":
         return [(key, value) for key, value in request.query_params.multi_items()]
 
-    form = await request.form()
-    return [(str(key), str(value)) for key, value in form.multi_items()]
+    body = await request.body()
+    if not body:
+        return []
+
+    return [(key, value) for key, value in parse_qsl(body.decode("utf-8"), keep_blank_values=True)]
 
 
 def _find_order(db: Session, order_code: str | None) -> PaymentOrder | None:
