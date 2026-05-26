@@ -42,6 +42,7 @@ class MyPosService:
         self.mode = settings.mypos_mode
         self.currency = settings.mypos_currency.upper()
         self.language = settings.mypos_language.upper()
+        self.ipc_version = "1.4"
         self.payment_method = settings.mypos_payment_method
         self.payment_parameters_required = settings.mypos_payment_parameters_required
         self.request_card_token = settings.mypos_request_card_token
@@ -95,24 +96,31 @@ class MyPosService:
         amount = self._format_amount(order.amount)
         first_name, family_name = self._split_name(user.full_name)
         fields: list[tuple[str, str]] = [
+            ("IPCmethod", "IPCPurchase"),
+            ("IPCVersion", self.ipc_version),
+            ("IPCLanguage", self.language),
+            ("SID", self.credentials.sid),
+            ("WalletNumber", self.credentials.wallet_number),
             ("Amount", amount),
             ("Currency", order.currency),
             ("OrderID", order.order_code),
-            ("SID", self.credentials.sid),
-            ("WalletNumber", self.credentials.wallet_number),
             ("KeyIndex", str(self.credentials.key_index)),
             ("URL_OK", f"{settings.base_url}{settings.api_v1_prefix}/payments/mypos/return/success"),
             ("URL_Cancel", f"{settings.base_url}{settings.api_v1_prefix}/payments/mypos/return/cancel"),
             ("URL_Notify", f"{settings.base_url}{settings.api_v1_prefix}/payments/mypos/notify"),
-            ("Language", self.language),
             ("PaymentMethod", self.payment_method),
             ("PaymentParametersRequired", str(self.payment_parameters_required)),
-            ("OrderDescription", order.description[:127]),
-            ("CustomerEmail", user.email),
-            ("CustomerFirstNames", first_name),
-            ("CustomerFamilyName", family_name),
             ("Note", order.description[:127]),
         ]
+
+        if self.payment_parameters_required == 1:
+            fields.extend(
+                [
+                    ("CustomerEmail", user.email),
+                    ("CustomerFirstNames", first_name),
+                    ("CustomerFamilyName", family_name),
+                ]
+            )
 
         if self.request_card_token:
             fields.append(("CardTokenRequest", "2"))
@@ -124,7 +132,7 @@ class MyPosService:
         return fields
 
     def sign_values(self, values: Iterable[str]) -> str:
-        message = "-".join(values).encode("utf-8")
+        message = base64.b64encode("-".join(values).encode("utf-8"))
         private_key = serialization.load_pem_private_key(
             self.credentials.private_key.encode("utf-8"),
             password=None,
@@ -144,7 +152,7 @@ class MyPosService:
         if not signature:
             return False
 
-        message = "-".join(values).encode("utf-8")
+        message = base64.b64encode("-".join(values).encode("utf-8"))
         try:
             certificate = x509.load_pem_x509_certificate(self.credentials.public_certificate.encode("utf-8"))
             certificate.public_key().verify(
