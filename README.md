@@ -9,7 +9,8 @@ FastAPI backend for the Integrative Medicine Journal platform.
 - Seeded magazine data and sample PDF files
 - Optional welcome emails through Resend
 - Subscription access enforced by the backend
-- Payment-provider integration ready to be connected
+- Hosted Mollie checkout with automatic monthly subscriptions
+- Backend-verified Mollie webhooks, idempotent renewals, and cancellation-at-period-end
 - Ready for deployment behind Nginx and systemd
 
 ## Local setup
@@ -35,6 +36,10 @@ The API will be available at `http://localhost:8000`.
 - `GET /api/v1/magazines/{slug}`
 - `GET /api/v1/subscriptions/plans`
 - `GET /api/v1/subscriptions/me`
+- `POST /api/v1/subscriptions/cancel`
+- `POST /api/v1/payments/mollie/checkout`
+- `POST /api/v1/payments/mollie/webhook`
+- `GET /api/v1/payments/orders/{order_code}`
 - `GET /api/v1/health`
 
 ## Deployment notes
@@ -43,3 +48,5 @@ Deployment examples are included in:
 
 - `deploy/integrative-backend.service`
 - `deploy/ohm.cod-st.com.nginx.conf`
+
+See `docs/mollie-live-checklist.md` before switching from a test key to a live key.

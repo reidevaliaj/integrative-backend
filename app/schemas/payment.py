@@ -1,11 +1,25 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel
+
+
+class CheckoutCreateRequest(BaseModel):
+    plan_id: int
+    locale: Literal["en", "de"] = "en"
+
+
+class MollieCheckoutCreateResponse(BaseModel):
+    checkout_url: str
+    order_code: str
+    mode: str
 
 
 class PaymentOrderRead(BaseModel):
     order_code: str
     status: str
+    provider: str
+    payment_kind: str
     amount: str
     currency: str
     billing_interval: str

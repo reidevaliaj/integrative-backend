@@ -7,7 +7,7 @@ from app.core.security import decode_token
 from app.db.session import get_db
 from app.models.subscription import UserSubscription
 from app.models.user import User
-from app.services.subscriptions import expire_subscription_if_needed, utc_now
+from app.services.subscriptions import as_utc, expire_subscription_if_needed, utc_now
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
@@ -49,7 +49,7 @@ def get_current_active_subscription(
     subscription = expire_subscription_if_needed(db, subscription)
     if subscription is None or subscription.status != "active":
         return None
-    if subscription.current_period_end is not None and subscription.current_period_end < utc_now():
+    if subscription.current_period_end is not None and as_utc(subscription.current_period_end) < utc_now():
         return None
     return subscription
 

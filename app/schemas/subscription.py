@@ -12,6 +12,8 @@ class SubscriptionPlanRead(BaseModel):
     description: str
     interval: str
     price_display: str
+    price_amount: str
+    price_currency: str
     checkout_provider: str | None = None
     checkout_enabled: bool = False
 
@@ -28,6 +30,7 @@ class UserSubscriptionRead(BaseModel):
     current_period_end: datetime | None
     auto_renew: bool
     cancel_at_period_end: bool
+    next_payment_at: datetime | None
     created_at: datetime
     updated_at: datetime
     plan: SubscriptionPlanRead
