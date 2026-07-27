@@ -3,18 +3,6 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
-class CheckoutField(BaseModel):
-    name: str
-    value: str
-
-
-class MyPosCheckoutCreateResponse(BaseModel):
-    checkout_url: str
-    mode: str
-    order_code: str
-    fields: list[CheckoutField]
-
-
 class PaymentOrderRead(BaseModel):
     order_code: str
     status: str

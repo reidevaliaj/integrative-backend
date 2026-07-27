@@ -12,7 +12,6 @@ class SubscriptionPlanRead(BaseModel):
     description: str
     interval: str
     price_display: str
-    is_fake: bool = True
     checkout_provider: str | None = None
     checkout_enabled: bool = False
 
@@ -32,7 +31,3 @@ class UserSubscriptionRead(BaseModel):
     created_at: datetime
     updated_at: datetime
     plan: SubscriptionPlanRead
-
-
-class SubscribeRequest(BaseModel):
-    plan_id: int

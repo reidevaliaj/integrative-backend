@@ -13,7 +13,7 @@ class PaymentOrder(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     plan_id: Mapped[int] = mapped_column(ForeignKey("subscription_plans.id"), index=True)
-    provider: Mapped[str] = mapped_column(String(50), default="mypos", index=True)
+    provider: Mapped[str] = mapped_column(String(50), default="unconfigured", index=True)
     order_code: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     status: Mapped[str] = mapped_column(String(50), default="pending", index=True)
     amount: Mapped[Decimal] = mapped_column(Numeric(10, 2))
@@ -47,7 +47,7 @@ class PaymentEvent(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     payment_order_id: Mapped[int | None] = mapped_column(ForeignKey("payment_orders.id", ondelete="SET NULL"), nullable=True)
-    provider: Mapped[str] = mapped_column(String(50), default="mypos", index=True)
+    provider: Mapped[str] = mapped_column(String(50), default="unconfigured", index=True)
     event_type: Mapped[str] = mapped_column(String(100), index=True)
     signature_valid: Mapped[bool] = mapped_column(Boolean, default=False)
     payload: Mapped[str] = mapped_column(Text)
