@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     def mollie_enabled(self) -> bool:
         key = (self.mollie_api_key or "").strip()
         expected_prefix = {"test": "test_", "live": "live_"}.get(self.mollie_mode)
-        return bool(expected_prefix and key.startswith(expected_prefix) and self.mollie_monthly_amount > 0)
+        return bool(expected_prefix and key.startswith(expected_prefix))
 
     @property
     def mollie_webhook_url(self) -> str:

@@ -34,6 +34,9 @@ def serialize_order(order: PaymentOrder) -> PaymentOrderRead:
         amount=format_amount(Decimal(order.amount)),
         currency=order.currency,
         billing_interval=order.billing_interval,
+        volume_year=order.volume_year,
+        magazine_id=order.magazine_id,
+        mode=order.provider_mode,
         period_start=order.period_start,
         period_end=order.period_end,
         latest_transaction_ref=order.latest_transaction_ref,
@@ -59,6 +62,9 @@ def create_mollie_checkout(
             user=current_user,
             plan=plan,
             locale=payload.locale,
+            volume_year=payload.volume_year,
+            magazine_id=payload.magazine_id,
+            terms_accepted=payload.terms_accepted,
         )
     except PaymentConflictError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc

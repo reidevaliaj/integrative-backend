@@ -120,6 +120,7 @@ class MollieService:
         locale: str,
         redirect_url: str,
         cancel_url: str,
+        recurring: bool = True,
     ) -> dict[str, Any]:
         return self._request(
             "POST",
@@ -127,7 +128,7 @@ class MollieService:
             json={
                 "amount": {"currency": currency, "value": amount},
                 "description": description,
-                "sequenceType": "first",
+                "sequenceType": "first" if recurring else "oneoff",
                 "redirectUrl": redirect_url,
                 "cancelUrl": cancel_url,
                 "webhookUrl": settings.mollie_webhook_url,
@@ -177,15 +178,17 @@ class MollieService:
         start_date: str,
         amount: str,
         currency: str,
+        interval: str = "1 month",
+        description: str = "OM & Nutrition subscription",
     ) -> dict[str, Any]:
         return self._request(
             "POST",
             f"/customers/{customer_id}/subscriptions",
             json={
                 "amount": {"currency": currency, "value": amount},
-                "interval": "1 month",
+                "interval": interval,
                 "startDate": start_date,
-                "description": "OM & Nutrition monthly subscription",
+                "description": description,
                 "mandateId": mandate_id,
                 "webhookUrl": settings.mollie_webhook_url,
                 "metadata": {
@@ -210,6 +213,33 @@ class MollieService:
             "DELETE",
             f"/customers/{customer_id}/subscriptions/{subscription_id}",
         )
+
+    def limit_subscription_to_final_payment(self, customer_id: str, subscription_id: str) -> None:
+        remote = self.get_subscription(customer_id, subscription_id)
+        # Mollie's `times` is the TOTAL scheduled payment count, not remaining payments.
+        # Derive the already-consumed count from times/timesRemaining when bounded,
+        # otherwise count all scheduled subscription payments, including failed ones.
+        if remote.get("times") is not None and remote.get("timesRemaining") is not None:
+            consumed = int(remote["times"]) - int(remote["timesRemaining"])
+        else:
+            consumed = 0
+            from_id = None
+            while True:
+                params: dict[str, Any] = {"limit": 250}
+                if from_id:
+                    params["from"] = from_id
+                page = self._request("GET", f"/customers/{customer_id}/subscriptions/{subscription_id}/payments", params=params)
+                consumed += len(page.get("_embedded", {}).get("payments", []))
+                next_link = page.get("_links", {}).get("next", {}) or {}
+                href = next_link.get("href")
+                if not href:
+                    break
+                from urllib.parse import parse_qs, urlparse
+                next_id = parse_qs(urlparse(href).query).get("from", [None])[0]
+                if not next_id or next_id == from_id:
+                    raise MollieAPIError("Unable to determine the final renewal")
+                from_id = next_id
+        self._request("PATCH", f"/customers/{customer_id}/subscriptions/{subscription_id}", json={"times": consumed + 1})
 
 
 mollie_service = MollieService()

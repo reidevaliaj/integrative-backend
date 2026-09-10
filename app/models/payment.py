@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Numeric, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -20,6 +20,11 @@ class PaymentOrder(Base):
     currency: Mapped[str] = mapped_column(String(10), default="EUR")
     billing_interval: Mapped[str] = mapped_column(String(50), default="monthly")
     payment_kind: Mapped[str] = mapped_column(String(50), default="initial")
+    provider_mode: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    volume_year: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    magazine_id: Mapped[int | None] = mapped_column(ForeignKey("magazines.id"), nullable=True)
+    subscription_id: Mapped[int | None] = mapped_column(ForeignKey("user_subscriptions.id"), nullable=True)
+    terms_version: Mapped[str | None] = mapped_column(String(40), nullable=True)
     description: Mapped[str] = mapped_column(Text)
     customer_email: Mapped[str] = mapped_column(String(255))
     period_start: Mapped[datetime] = mapped_column(DateTime(timezone=True))

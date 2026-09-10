@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
+from decimal import Decimal
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -15,6 +16,9 @@ class SubscriptionPlan(Base):
     description: Mapped[str] = mapped_column(Text)
     interval: Mapped[str] = mapped_column(String(50))
     price_display: Mapped[str] = mapped_column(String(50))
+    amount: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
+    category: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    is_available: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     subscriptions = relationship("UserSubscription", back_populates="plan")
@@ -30,6 +34,11 @@ class UserSubscription(Base):
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     provider: Mapped[str | None] = mapped_column(String(50), nullable=True)
     billing_interval: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    provider_mode: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    volume_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    billing_amount: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
+    billing_currency: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    cancel_effective_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     current_period_start: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     current_period_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     activated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

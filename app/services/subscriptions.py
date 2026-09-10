@@ -1,9 +1,28 @@
 from calendar import monthrange
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from sqlalchemy.orm import Session
 
 from app.models.subscription import UserSubscription
+
+PUBLISHER_TIMEZONE = ZoneInfo("Europe/Berlin")
+
+
+def calendar_year(now: datetime | None = None) -> int:
+    return as_utc(now or utc_now()).astimezone(PUBLISHER_TIMEZONE).year
+
+
+def compute_annual_period(year: int) -> tuple[datetime, datetime]:
+    start = datetime(year, 1, 1, tzinfo=PUBLISHER_TIMEZONE)
+    end = datetime(year + 1, 1, 1, tzinfo=PUBLISHER_TIMEZONE) - timedelta(seconds=1)
+    return as_utc(start), as_utc(end)
+
+
+def cancellation_effective_at(now: datetime | None = None) -> datetime:
+    local = as_utc(now or utc_now()).astimezone(PUBLISHER_TIMEZONE)
+    year = local.year + (1 if local.month >= 11 else 0)
+    return compute_annual_period(year)[1]
 
 
 def utc_now() -> datetime:

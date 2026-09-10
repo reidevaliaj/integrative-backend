@@ -4,3 +4,5 @@ __pycache__/
 *.pyc
 *.pyo
 *.db
+# Paid journal files are deployed privately over SSH, never to the source repository.
+app/static/pdfs/*.pdf

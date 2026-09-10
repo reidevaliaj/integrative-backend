@@ -1,92 +1,70 @@
+"""Idempotent catalogue updates. Historical plans and customer records are preserved."""
+from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-
-from app.core.config import settings
-from app.models.magazine import Magazine
+from app.models.magazine import Magazine, MagazineDocument
 from app.models.subscription import SubscriptionPlan
 
 DEFAULT_MAGAZINES = [
     {
-        "slug": "special-issue-sh40",
-        "title": "Longevity",
+        "slug": "special-issue-sh40", "title": "Longevity",
         "eyebrow": "2026 | Special Issue No. 40",
-        "description": "The current featured digital issue of OM & Nutrition, focusing on healthy aging, prevention, immune aging and integrative clinical perspectives for professional readers.",
-        "pdf_filename": "1.) SH40 Internet - komplett.pdf",
+        "description": "Healthy ageing, prevention, nutrition and integrative longevity medicine. Complete English special edition, 116 pages.",
+        "pdf_filename": "sh40-longevity-en.pdf", "volume_year": 2026,
+        "issue_type": "special", "issue_number": "40", "language": "en",
+        "cover_image": "/covers/sh40-longevity.jpg",
+        "documents": [{"section": "complete", "pdf_filename": "sh40-longevity-en.pdf", "page_count": 116, "position": 0}],
+    },
+    {
+        "slug": "main-issue-194", "title": "Collagen & Integrative Medicine",
+        "eyebrow": "2026 | Main Issue No. 194",
+        "description": "Collagen, gut health, mitochondrial medicine and orthomolecular care. The Basic section (32 pages) and Medical section (83 pages) are included together.",
+        "pdf_filename": "194-basic-en.pdf", "volume_year": 2026,
+        "issue_type": "classic", "issue_number": "194", "language": "en",
+        "cover_image": "/covers/main-194.jpg",
+        "documents": [
+            {"section": "basic", "pdf_filename": "194-basic-en.pdf", "page_count": 32, "position": 0},
+            {"section": "medical", "pdf_filename": "194-medical-en.pdf", "page_count": 83, "position": 1},
+        ],
     },
 ]
-
-PLACEHOLDER_MAGAZINE_SLUGS = {
-    "current-main-issue",
-    "sample-issue-request",
-    "current-special-issue",
-}
-
-PLACEHOLDER_MAGAZINE_FILES = {
-    "current-main-issue.pdf",
-    "sample-issue-request.pdf",
-    "current-special-issue.pdf",
-}
-
-DEFAULT_PLAN = {
-    "code": "monthly-digital-subscription",
-    "name": "OM & Nutrition Monthly Subscription",
-    "description": "Monthly digital subscription for OM & Nutrition with online access to the current featured issue and future issues published within the title.",
-    "interval": "monthly",
-    "price_display": settings.subscription_price_display,
-}
+DEFAULT_PLANS = [
+    {"code": "classic-annual", "name": "Classic subscription", "category": "classic", "amount": Decimal("88.00"), "interval": "annual", "price_display": "EUR 88 / calendar year", "description": "Four main issues per calendar year. Each includes the Basic and Medical sections."},
+    {"code": "special-annual", "name": "Special edition subscription", "category": "special", "amount": Decimal("88.00"), "interval": "annual", "price_display": "EUR 88 / calendar year", "description": "Four special issues per calendar year, each as one complete edition."},
+    {"code": "combined-annual", "name": "Combined subscription", "category": "combined", "amount": Decimal("160.00"), "interval": "annual", "price_display": "EUR 160 / calendar year", "description": "All eight issues: four main issues with both sections, plus four special issues. Favourite."},
+    {"code": "single-issue", "name": "Single issue", "category": "single", "amount": Decimal("24.00"), "interval": "once", "price_display": "EUR 24 / issue", "description": "One digital issue. Main issues include both the Basic and Medical sections. No renewal."},
+]
 
 
 def seed_magazines(db: Session) -> None:
-    magazines = db.scalars(select(Magazine).order_by(Magazine.id)).all()
-    magazines_by_slug = {magazine.slug: magazine for magazine in magazines}
-    desired_slugs = {payload["slug"] for payload in DEFAULT_MAGAZINES}
-    changed = False
-
-    for magazine in magazines:
-        if magazine.slug in PLACEHOLDER_MAGAZINE_SLUGS or magazine.pdf_filename in PLACEHOLDER_MAGAZINE_FILES:
-            if magazine.slug not in desired_slugs:
-                db.delete(magazine)
-                changed = True
-
-    for payload in DEFAULT_MAGAZINES:
-        magazine = magazines_by_slug.get(payload["slug"])
+    for entry in DEFAULT_MAGAZINES:
+        payload = {key: value for key, value in entry.items() if key != "documents"}
+        magazine = db.scalar(select(Magazine).where(Magazine.slug == payload["slug"]))
         if magazine is None:
-            db.add(Magazine(**payload))
-            changed = True
-            continue
-
-        for field, value in payload.items():
-            if getattr(magazine, field) != value:
-                setattr(magazine, field, value)
-                changed = True
-
-        if not magazine.is_published:
-            magazine.is_published = True
-            changed = True
-
-    if changed:
-        db.commit()
+            magazine = Magazine(**payload)
+            db.add(magazine)
+            db.flush()
+        else:
+            for key, value in payload.items():
+                setattr(magazine, key, value)
+        for document in entry["documents"]:
+            item = next((doc for doc in magazine.documents if doc.section == document["section"]), None)
+            if item is None:
+                magazine.documents.append(MagazineDocument(**document))
+            else:
+                for key, value in document.items():
+                    setattr(item, key, value)
+    db.commit()
 
 
 def seed_subscription_plans(db: Session) -> None:
-    existing_plan = db.scalar(
-        select(SubscriptionPlan)
-        .where(SubscriptionPlan.code.in_([DEFAULT_PLAN["code"], "digital-annual", "annual-digital-subscription"]))
-        .order_by(SubscriptionPlan.id)
-    )
-    if existing_plan is None:
-        existing_plan = db.scalar(select(SubscriptionPlan).order_by(SubscriptionPlan.id))
-
-    changed = False
-
-    if existing_plan is None:
-        db.add(SubscriptionPlan(**DEFAULT_PLAN))
-        changed = True
-    else:
-        for field, value in DEFAULT_PLAN.items():
-            if getattr(existing_plan, field) != value:
-                setattr(existing_plan, field, value)
-                changed = True
-
-    if changed:
-        db.commit()
+    for payload in DEFAULT_PLANS:
+        plan = db.scalar(select(SubscriptionPlan).where(SubscriptionPlan.code == payload["code"]))
+        if plan is None:
+            plan = SubscriptionPlan(**payload, is_available=True)
+            db.add(plan)
+        else:
+            for key, value in payload.items():
+                setattr(plan, key, value)
+            plan.is_available = True
+    db.commit()
