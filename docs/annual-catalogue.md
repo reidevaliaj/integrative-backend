@@ -10,7 +10,11 @@ Implemented 10 September 2026 from the publisher's updated commercial brief.
 - Single issue: EUR 24 once; both sections of a main issue are included.
 - Previous published volumes can be purchased once at the displayed plan price. No historical PDFs were supplied in this release, so only 2026 is listed.
 
-The two SH40 attachments were byte-identical. The catalogue has one special issue (116 pages) and one main issue (194, Basic 32 pages + Medical 83 pages). Source PDFs retain the printed cover prices; the storefront explains that the current digital price is EUR 24.
+The two SH40 attachments were byte-identical. The catalogue has one special issue (116 pages) and one main issue (194, Basic 32 pages + Medical 83 pages). The current digital single-issue price is EUR 24.
+
+On 21 September 2026, the publisher supplied `OM 194 en-GB.pdf` (115 pages) with the corrected EUR 24 cover, plus `Cover OM 194 en-GB.jpg`. The replacement PDF is split without changing page content: source pages 1-32 replace `194-basic-en.pdf`, and pages 33-115 replace `194-medical-en.pdf`. Existing issue IDs, reader sections, and purchase access are preserved. The public cover URL includes `?v=20260921` to refresh cached thumbnails. Both identical `OM-Logo en-GB` attachments supply the English logo used by the frontend header, footer, and legal-page header. Only the first logo PDF page contains the complete artwork.
+
+No revised SH40 file accompanied that update. Until it is supplied, its original PDF and cover remain in place, and the storefront identifies the older price on the Longevity cover specifically.
 
 ## Billing and access
 

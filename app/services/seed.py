@@ -21,7 +21,7 @@ DEFAULT_MAGAZINES = [
         "description": "Collagen, gut health, mitochondrial medicine and orthomolecular care. The Basic section (32 pages) and Medical section (83 pages) are included together.",
         "pdf_filename": "194-basic-en.pdf", "volume_year": 2026,
         "issue_type": "classic", "issue_number": "194", "language": "en",
-        "cover_image": "/covers/main-194.jpg",
+        "cover_image": "/covers/main-194.jpg?v=20260921",
         "documents": [
             {"section": "basic", "pdf_filename": "194-basic-en.pdf", "page_count": 32, "position": 0},
             {"section": "medical", "pdf_filename": "194-medical-en.pdf", "page_count": 83, "position": 1},
