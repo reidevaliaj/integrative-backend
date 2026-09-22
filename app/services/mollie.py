@@ -1,4 +1,6 @@
 from typing import Any
+from hashlib import sha256
+from time import monotonic
 
 import httpx
 
@@ -18,6 +20,9 @@ class MollieAPIError(RuntimeError):
 class MollieService:
     provider = "mollie"
 
+    def __init__(self) -> None:
+        self._methods_cache: dict[tuple[str, str, str, str, str], tuple[float, bool]] = {}
+
     @property
     def mode(self) -> str:
         return settings.mollie_mode
@@ -33,6 +38,37 @@ class MollieService:
     @property
     def is_enabled(self) -> bool:
         return settings.mollie_enabled
+
+    def _has_payment_method(self, *, amount: str, sequence: str) -> bool:
+        # A valid live key does not mean Mollie has approved any payment methods.
+        # Cache only briefly so approval takes effect without another deployment.
+        credential = sha256((settings.mollie_api_key or "").encode()).hexdigest()
+        cache_key = (credential, self.mode, self.currency, amount, sequence)
+        now = monotonic()
+        cached = self._methods_cache.get(cache_key)
+        if cached and cached[0] > now:
+            return cached[1]
+        try:
+            response = self._request("GET", "/methods", params={
+                "sequenceType": sequence,
+                "amount[value]": amount,
+                "amount[currency]": self.currency,
+            })
+            available = bool(response.get("_embedded", {}).get("methods", []))
+        except (MollieAPIError, MollieConfigurationError):
+            available = False
+        self._methods_cache = {key: value for key, value in self._methods_cache.items() if value[0] > now}
+        self._methods_cache[cache_key] = (monotonic() + 60, available)
+        return available
+
+    def checkout_available(self, *, amount: str, recurring: bool) -> bool:
+        if not self.is_enabled:
+            return False
+        if self.mode == "test":
+            return True
+        return self._has_payment_method(amount=amount, sequence="first" if recurring else "oneoff") and (
+            not recurring or self._has_payment_method(amount=amount, sequence="recurring")
+        )
 
     def _request(
         self,

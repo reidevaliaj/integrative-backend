@@ -30,6 +30,10 @@ class FakeMollieService:
     currency = "EUR"
     amount = Decimal("22.00")
     is_enabled = True
+    checkout_ready = True
+
+    def checkout_available(self, **_: Any) -> bool:
+        return self.checkout_ready
 
     def __init__(self) -> None:
         self.payments: dict[str, dict[str, Any]] = {}
@@ -206,6 +210,30 @@ class MolliePaymentFlowTests(unittest.TestCase):
         duplicate = process_mollie_payment(self.db, payment, mollie=self.mollie)
         self.assertTrue(duplicate.duplicate)
         self.assertEqual(self.mollie.subscription_create_count, 1)
+
+    def test_unavailable_methods_create_no_order_or_customer(self):
+        from app.services.mollie_payments import PaymentValidationError
+        self.mollie.checkout_ready = False
+        with patch.object(self.mollie, "create_customer") as customer:
+            with self.assertRaisesRegex(PaymentValidationError, "temporarily unavailable"):
+                create_checkout(self.db, user=self.user, plan=self.plan, locale="en",
+                                terms_accepted=True, mollie=self.mollie)
+            customer.assert_not_called()
+        self.assertEqual(list(self.db.scalars(select(PaymentOrder))), [])
+
+    def test_catalogue_checks_annual_and_archive_payment_capabilities(self):
+        from app.api.routes.subscriptions import list_plans
+        with patch("app.api.routes.subscriptions.mollie_service.checkout_available",
+                   side_effect=lambda *, amount, recurring: not recurring):
+            current = list_plans(volume_year=2026, current_user=self.user, db=self.db)
+            self.assertEqual({p.code: p.checkout_enabled for p in current}, {
+                "classic-annual": False, "special-annual": False,
+                "combined-annual": False, "single-issue": True,
+            })
+            self.main.volume_year = 2025
+            self.db.commit()
+            archive = list_plans(volume_year=2025, current_user=self.user, db=self.db)
+            self.assertTrue(all(p.checkout_enabled for p in archive))
 
     def test_paid_renewal_extends_access(self) -> None:
         _, subscription, _ = self._create_paid_initial_subscription()

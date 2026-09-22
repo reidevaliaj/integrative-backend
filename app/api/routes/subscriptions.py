@@ -29,7 +29,7 @@ def serialize_plan(plan: SubscriptionPlan) -> SubscriptionPlanRead:
         price_amount=format_amount(plan.amount if plan.amount is not None else settings.mollie_monthly_amount),
         price_currency=settings.mollie_currency.upper(),
         checkout_provider="mollie" if mollie_service.is_enabled else None,
-        checkout_enabled=mollie_service.is_enabled and plan.is_available,
+        checkout_enabled=False,
         category=plan.category,
         mode=settings.mollie_mode,
     )
@@ -69,6 +69,10 @@ def list_plans(
     result = []
     for plan in plans:
         item = serialize_plan(plan)
+        item.checkout_enabled = plan.amount is not None and mollie_service.checkout_available(
+            amount=format_amount(plan.amount),
+            recurring=plan.category != "single" and (volume_year or calendar_year()) == calendar_year(),
+        )
         item.owned = has_volume_overlap(orders, volume_year or calendar_year(), plan.category)
         result.append(item)
     return result

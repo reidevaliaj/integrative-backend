@@ -545,6 +545,8 @@ def create_checkout(db: Session, *, user: User, plan: SubscriptionPlan, locale: 
         raise PaymentConflictError("This archive volume is not available yet.")
     interval = "single_issue" if magazine else "annual" if year == calendar_year() else "archive"
     period_start, period_end = compute_annual_period(year)
+    if not mollie.checkout_available(amount=format_amount(plan.amount), recurring=interval == "annual"):
+        raise PaymentValidationError("Payments are temporarily unavailable. Please try again later.")
 
     # Serialise checkout preparation per customer. Pending orders prevent duplicate charges.
     user = db.scalar(select(User).where(User.id == user.id).with_for_update())
