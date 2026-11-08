@@ -10,4 +10,5 @@ class UserRead(BaseModel):
     email: EmailStr
     full_name: str | None
     is_active: bool
+    is_editor: bool = False
     created_at: datetime

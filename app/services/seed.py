@@ -28,6 +28,46 @@ DEFAULT_MAGAZINES = [
         ],
     },
 ]
+DEFAULT_MAGAZINES.extend([
+    {
+        "slug": "main-issue-195", "title": "Medicinal Mushrooms & Integrative Medicine",
+        "eyebrow": "2026 | Main Issue No. 195",
+        "description": "Medicinal mushrooms, inflammation, metabolism and integrative care. Includes the Basic section (34 pages) and Medical section (85 pages).",
+        "pdf_filename": "195-basic-en.pdf", "volume_year": 2026,
+        "issue_type": "classic", "issue_number": "195", "language": "en", "cover_image": "/covers/main-195.jpg",
+        "documents": [
+            {"section": "basic", "pdf_filename": "195-basic-en.pdf", "page_count": 34, "position": 0},
+            {"section": "medical", "pdf_filename": "195-medical-en.pdf", "page_count": 85, "position": 1},
+        ],
+    },
+    {
+        "slug": "main-issue-196", "title": "OPC, Phytochemicals & Integrative Medicine",
+        "eyebrow": "2026 | Main Issue No. 196",
+        "description": "OPC, phytochemicals, dietary fibre and current perspectives in integrative medicine. Includes the Basic section (37 pages) and Medical section (90 pages).",
+        "pdf_filename": "196-basic-en.pdf", "volume_year": 2026,
+        "issue_type": "classic", "issue_number": "196", "language": "en", "cover_image": "/covers/main-196.jpg",
+        "documents": [
+            {"section": "basic", "pdf_filename": "196-basic-en.pdf", "page_count": 37, "position": 0},
+            {"section": "medical", "pdf_filename": "196-medical-en.pdf", "page_count": 90, "position": 1},
+        ],
+    },
+    {
+        "slug": "special-issue-sh41", "title": "AD(H)D / HPU / KPU (II)",
+        "eyebrow": "2026 | Special Issue No. 41",
+        "description": "A focused collection of professional contributions on AD(H)D, HPU and KPU. One complete English special edition, 103 pages.",
+        "pdf_filename": "sh41-adhd-en.pdf", "volume_year": 2026,
+        "issue_type": "special", "issue_number": "41", "language": "en", "cover_image": "/covers/sh41-adhd.jpg",
+        "documents": [{"section": "complete", "pdf_filename": "sh41-adhd-en.pdf", "page_count": 103, "position": 0}],
+    },
+    {
+        "slug": "special-issue-sh42", "title": "Sports Medicine II",
+        "eyebrow": "2026 | Special Issue No. 42",
+        "description": "Training, recovery, nutrition, the gut and professional perspectives in sports medicine. One complete English special edition, 145 pages.",
+        "pdf_filename": "sh42-sports-en.pdf", "volume_year": 2026,
+        "issue_type": "special", "issue_number": "42", "language": "en", "cover_image": "/covers/sh42-sports.jpg",
+        "documents": [{"section": "complete", "pdf_filename": "sh42-sports-en.pdf", "page_count": 145, "position": 0}],
+    },
+])
 DEFAULT_PLANS = [
     {"code": "classic-annual", "name": "Classic subscription", "category": "classic", "amount": Decimal("88.00"), "interval": "annual", "price_display": "EUR 88 / calendar year", "description": "Four main issues per calendar year. Each includes the Basic and Medical sections."},
     {"code": "special-annual", "name": "Special edition subscription", "category": "special", "amount": Decimal("88.00"), "interval": "annual", "price_display": "EUR 88 / calendar year", "description": "Four special issues per calendar year, each as one complete edition."},

@@ -466,7 +466,7 @@ class MolliePaymentFlowTests(unittest.TestCase):
     def test_seed_is_idempotent(self):
         seed_magazines(self.db)
         seed_subscription_plans(self.db)
-        self.assertEqual(len(self.db.scalars(select(Magazine)).all()), 2)
+        self.assertEqual(len(self.db.scalars(select(Magazine)).all()), 6)
         self.assertEqual(len(self.main.documents), 2)
         self.assertEqual(len(self.db.scalars(select(SubscriptionPlan)).all()), 4)
 

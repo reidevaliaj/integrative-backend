@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.db.base import Base
 from app.db.session import engine
 from app.services.seed import seed_magazines, seed_subscription_plans
+from app.services.blog_seed import seed_blog
 
 
 def init_db() -> None:
@@ -14,6 +15,7 @@ def init_db() -> None:
 
 def apply_schema_updates() -> None:
     statements = [
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_editor BOOLEAN NOT NULL DEFAULT FALSE",
         "ALTER TABLE magazines ADD COLUMN IF NOT EXISTS volume_year INTEGER",
         "ALTER TABLE magazines ADD COLUMN IF NOT EXISTS issue_type VARCHAR(20)",
         "ALTER TABLE magazines ADD COLUMN IF NOT EXISTS issue_number VARCHAR(30)",
@@ -73,3 +75,4 @@ def apply_schema_updates() -> None:
 def bootstrap_seed_data(db: Session) -> None:
     seed_magazines(db)
     seed_subscription_plans(db)
+    seed_blog(db)

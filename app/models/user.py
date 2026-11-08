@@ -14,6 +14,7 @@ class User(Base):
     full_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     hashed_password: Mapped[str] = mapped_column(String(255))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_editor: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     mollie_customer_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
     mollie_customer_mode: Mapped[str | None] = mapped_column(String(20), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
