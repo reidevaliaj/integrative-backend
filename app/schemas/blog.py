@@ -11,7 +11,7 @@ class BlogWrite(BaseModel):
     body: str = Field(min_length=30, max_length=60000)
     category: str = Field(default="Journal notes", min_length=2, max_length=80)
     author: str = Field(default="OM & Nutrition", min_length=2, max_length=120)
-    cover: Literal["journal", "sports", "preview"] = "journal"
+    cover: Literal["journal", "sports", "preview", "fermented-foods"] = "journal"
     status: Literal["draft", "published"] = "draft"
     version: int | None = Field(default=None, ge=1)
 
